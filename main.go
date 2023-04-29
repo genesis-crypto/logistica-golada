@@ -2,12 +2,17 @@ package main
 
 import (
 	"fmt"
+	"logistica/gerenciamento"
 	"logistica/rastreamento"
 	"logistica/user"
 )
 
 func main() {
-	productNotifier := rastreamento.NewPublisher(10, "a enviar", "carro")
+	tranporteMethod := gerenciamento.Aviao{}
+	gerenciamentoFrota := gerenciamento.CreateGerenciamento(&tranporteMethod)
+	gerenciamentoFrota.Transport()
+
+	productNotifier := rastreamento.NewPublisher(10, "a enviar", gerenciamentoFrota.Strategy)
 
 	clientOne := &user.Client{
 		Id: "user@user.com",
