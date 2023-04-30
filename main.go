@@ -2,37 +2,34 @@ package main
 
 import (
 	"fmt"
-	"logistica/gerenciamento"
-	"logistica/pedido"
-	"logistica/rastreamento"
-	"logistica/user"
+	"logistica/sistema"
 )
 
 func main() {
-	novoPedido := &pedido.Pedido{
-		Id:     1,
-		Status: "pendente",
-	}
-
-	criarPedidoCommand := &pedido.CriarPedidoCommand{Pedido: novoPedido}
-	invoker := &pedido.PedidoInvoker{}
-	invoker.SetCommand(criarPedidoCommand)
-	err := invoker.Run()
+	facade := sistema.NewSistemaFacade()
+	pedidoFacade, err := facade.CreatePedido(1, "criando")
 	if err != nil {
-		fmt.Printf("Erro ao criar o pedido: %v\n", err)
+		fmt.Println("falha ao criar o pedido")
+		return
 	}
 
-	tranporteMethod := gerenciamento.Aviao{}
-	gerenciamentoFrota := gerenciamento.CreateGerenciamento(&tranporteMethod)
-	gerenciamentoFrota.Transport()
-
-	productNotifier := rastreamento.NewPublisher(10, "a enviar", gerenciamentoFrota.Strategy)
-
-	clientOne := &user.Client{
-		Id: "user@user.com",
+	userFacade, err := facade.CreateUser("user@user.com")
+	if err != nil {
+		fmt.Println("falha ao criar o usuário")
+		return
 	}
-	productNotifier.Register(clientOne)
 
-	productNotifier.UpdateEvent()
-	fmt.Println("running")
+	facade.CreateTransporte()
+	err = facade.CreateNotifier(pedidoFacade)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	facade.RegistraUsuarioNotificacao(userFacade)
+	err = facade.TransportaCarga()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
